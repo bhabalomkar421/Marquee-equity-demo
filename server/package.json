@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^0.27.2",
+    "cors": "^2.8.5",
     "express": "^4.18.1",
     "html-table-to-json": "^1.0.0",
     "node-fetch": "^3.2.6",

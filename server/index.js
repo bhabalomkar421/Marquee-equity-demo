@@ -2,29 +2,113 @@ const express = require('express');
 const app = express();
 const port = 5000;
 const axios = require('axios');
-const { Client } = require('pg');
+const { Pool, Client } = require("pg");
 const HtmlTableToJson = require('html-table-to-json');
+var fs = require('fs');
+const cors = require('cors');
 
-const client = new Client({
-  user: 'sgpostgres',
-  host: 'SG-flower-muskox-4638-3653-pgsql-master.servers.mongodirector.com',
-  database: 'Company',
-  password: 'GRy7YxhI$inHFrAv',
+// middleware
+app.use(cors());
+app.use(express.json());
+
+var client = new Client({
+  user: 'postgres',
+  host: 'localhost',
+  database: 'company',
+  password: 'root',
   port: 5432,
-})
+});
+
 client.connect(function(err) {
   if (err) throw err;
   console.log("Connected!");
 });
 
-app.get('/:search', function (req, res) {
+var pool = new Pool({
+    user: 'postgres',
+    host: 'localhost',
+    database: 'company',
+    password: 'root',
+    port: 5432,
+});
+
+const execute = async (query) => {
+    try {
+        // await client.connect();     // gets connection
+        await client.query(query);  // sends queries
+        return true;
+    } catch (error) {
+        console.error(error.stack);
+        return false;
+    } finally {
+        // await client.end();         // closes connection
+    }
+};
+
+const insertData = async (cin, companyName, companyUrl) => {
+    try {
+        // await client.connect();           // gets connection
+        console.log(companyName);
+        await client.query(
+            `INSERT INTO "companies" ("cin", "companyName", "companyUrl")  
+             VALUES ($1, $2, $3)`, [cin, companyName, companyUrl]); // sends queries
+        return true;
+    } catch (error) {
+        console.error(error.stack);
+        return false;
+    } finally {
+        // await client.end();               // closes connection
+    }
+};
+
+// create table
+// const createTable = `
+//     CREATE TABLE IF NOT EXISTS"companies" (
+//         "cin" VARCHAR(100) NOT NULL,
+//         "companyName" VARCHAR(500) NOT NULL,
+//         "companyUrl" VARCHAR(1000) NOT NULL,
+//         PRIMARY KEY ("cin")
+//     );`;
+
+// execute(createTable).then(result => {
+//     if (result) {
+//         console.log('Table created');
+//     }
+// });
+
+// delete table
+// const deleteTable = `
+//     DROP TABLE "companies"`;
+
+// execute(deleteTable).then(result => {
+//     if (result) {
+//         console.log('Table deleted');
+//     }
+// });
+
+// insert data
+// const insert = `INSERT INTO companies("cin", "companyName", "companyUrl") VALUES ('1234567', 'temp2', 'https://www.temp2.com');`;
+
+// execute(insert).then(result => {
+//     if (result) {
+//         console.log('data inserted');
+//     }
+// });
+
+// select 
+// pool.query("SELECT * from companies", (err, res) => {
+//   console.log(err, res);
+//   pool.end();
+// });
+
+app.get('/', function (req, res) {
     var result = {};
     var search = req.params.file;;
     var doSome = new Promise(function(resolve, reject){
         resolve('I am doing something');
         var str = "";
         console.log(search);
-        let url = `https://www.zaubacorp.com/companysearchresults/` + search;
+        let url = `https://www.zaubacorp.com/company-list`;
         axios({
             method:'get',
             url
@@ -47,8 +131,26 @@ app.get('/:search', function (req, res) {
             console.log(str);
             var jsonTables = HtmlTableToJson.parse(`${str}`);
             result = {resultTable : jsonTables.results};
-            console.log(result.resultTable);
-            res.json({result : result.resultTable});
+
+            fs.readFile('./data.json', function (err, data) {
+                if(err) {
+                    console.log(err);
+                    return;
+                }
+                var json = JSON.parse(data);
+                var doSmall1 = new Promise(function(resolve, reject){
+                    resolve("test");
+                    json.concat(result.resultTable[0]);
+                });
+                doSmall1.then(function(value){
+                    console.log(json);
+                    fs.writeFile("./test.json", json);
+                })
+                .catch(err => console.log(err));
+                
+            })
+            // console.log(result.resultTable);
+            res.json(result.resultTable[0]);
         })
         .catch( (error) => {
             console.log(error);
@@ -68,6 +170,7 @@ app.get('/company/:companyName/:cin', (req, res) => {
     var str = "";
     var url = "https://www.zaubacorp.com/company/" + companyName + "/" + cin;
     var output = {};
+    
     axios({
         method:'get',
         url
@@ -88,6 +191,28 @@ app.get('/company/:companyName/:cin', (req, res) => {
     .catch( (error) => {
         console.log(error);
     });
+});
+
+app.post('/addCompany', (req, res) => {
+    const cin = req.body.cin;
+    const companyName = req.body.companyName;
+    const companyUrl = req.body.companyUrl;
+
+    insertData(cin, companyName, companyUrl).then(result => {
+        if (result) {
+            console.log('User inserted');
+            res.json({success : true, message : "Successfully Added"}); 
+        }
+    });
+});
+
+app.get('/companyList', (req, res) => {
+    pool.query('SELECT * FROM companies', (error, results) => {
+        if (error) {
+          throw error
+        }
+        res.status(200).json(results.rows)
+    })
 });
 
 
