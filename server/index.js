@@ -17,50 +17,50 @@ client.connect(function(err) {
   console.log("Connected!");
 });
 
-// app.get('/:search', function (req, res) {
-//     var result = {};
-//     var search = req.params.file;;
-//     var doSome = new Promise(function(resolve, reject){
-//         resolve('I am doing something');
-//         var str = "";
-//         console.log(search);
-//         let url = `https://www.zaubacorp.com/companysearchresults/` + search;
-//         axios({
-//             method:'get',
-//             url
-//         })
-//         .then( (response) => {
-//             console.log(JSON.stringify(response.data));
-//             str = response.data;
-//             // var doSmall = new Promise(function(resolve, reject){
+app.get('/:search', function (req, res) {
+    var result = {};
+    var search = req.params.file;;
+    var doSome = new Promise(function(resolve, reject){
+        resolve('I am doing something');
+        var str = "";
+        console.log(search);
+        let url = `https://www.zaubacorp.com/companysearchresults/` + search;
+        axios({
+            method:'get',
+            url
+        })
+        .then( (response) => {
+            console.log(JSON.stringify(response.data));
+            str = response.data;
+            // var doSmall = new Promise(function(resolve, reject){
                
-//             //     resolve('I am doing something');
-//             // });
-//             // doSmall.then(function(value){
+            //     resolve('I am doing something');
+            // });
+            // doSmall.then(function(value){
                 
-//             // })
-//             // .catch(err => console.log(err));
+            // })
+            // .catch(err => console.log(err));
             
-//             var i1 = str.search("<table");
-//             var i2 = str.search("</table>");
-//             str = str.substring(i1, i2) + "</table>";
-//             console.log(str);
-//             var jsonTables = HtmlTableToJson.parse(`${str}`);
-//             result = {resultTable : jsonTables.results};
-//             console.log(result.resultTable);
-//             res.json({result : result.resultTable});
-//         })
-//         .catch( (error) => {
-//             console.log(error);
-//         });
-//     });
+            var i1 = str.search("<table");
+            var i2 = str.search("</table>");
+            str = str.substring(i1, i2) + "</table>";
+            console.log(str);
+            var jsonTables = HtmlTableToJson.parse(`${str}`);
+            result = {resultTable : jsonTables.results};
+            console.log(result.resultTable);
+            res.json({result : result.resultTable});
+        })
+        .catch( (error) => {
+            console.log(error);
+        });
+    });
     
-//     // doSome.then(function(value){
-//     //     console.log("test");
-//     //     console.log(result.resultTable);
-//     //     // res.send(JSON.stringify(result.resultTable));
-//     // });
-// })
+    // doSome.then(function(value){
+    //     console.log("test");
+    //     console.log(result.resultTable);
+    //     // res.send(JSON.stringify(result.resultTable));
+    // });
+})
 
 app.get('/company/:companyName/:cin', (req, res) => {
     var cin = req.params.cin;
