@@ -34,73 +34,30 @@ var pool = new Pool({
 
 const execute = async (query) => {
     try {
-        // await client.connect();     // gets connection
         await client.query(query);  // sends queries
         return true;
     } catch (error) {
         console.error(error.stack);
         return false;
     } finally {
-        // await client.end();         // closes connection
     }
 };
 
-const insertData = async (cin, companyName, companyUrl) => {
+const insertData = async (cin, companyName) => {
     try {
-        // await client.connect();           // gets connection
         console.log(companyName);
         await client.query(
-            `INSERT INTO "companies" ("cin", "companyName", "companyUrl")  
-             VALUES ($1, $2, $3)`, [cin, companyName, companyUrl]); // sends queries
+            `INSERT INTO "companies" ("cin", "companyName")  
+             VALUES ($1, $2)`, [cin, companyName]); // sends queries
         return true;
     } catch (error) {
         console.error(error.stack);
         return false;
     } finally {
-        // await client.end();               // closes connection
     }
 };
 
-// create table
-// const createTable = `
-//     CREATE TABLE IF NOT EXISTS"companies" (
-//         "cin" VARCHAR(100) NOT NULL,
-//         "companyName" VARCHAR(500) NOT NULL,
-//         "companyUrl" VARCHAR(1000) NOT NULL,
-//         PRIMARY KEY ("cin")
-//     );`;
-
-// execute(createTable).then(result => {
-//     if (result) {
-//         console.log('Table created');
-//     }
-// });
-
-// delete table
-// const deleteTable = `
-//     DROP TABLE "companies"`;
-
-// execute(deleteTable).then(result => {
-//     if (result) {
-//         console.log('Table deleted');
-//     }
-// });
-
-// insert data
-// const insert = `INSERT INTO companies("cin", "companyName", "companyUrl") VALUES ('1234567', 'temp2', 'https://www.temp2.com');`;
-
-// execute(insert).then(result => {
-//     if (result) {
-//         console.log('data inserted');
-//     }
-// });
-
-// select 
-// pool.query("SELECT * from companies", (err, res) => {
-//   console.log(err, res);
-//   pool.end();
-// });
-
+// API to get list of all companies by scraping through each webpage elements
 app.get('/', function (req, res) {
     var result = {};
     var search = req.params.file;;
@@ -116,14 +73,6 @@ app.get('/', function (req, res) {
         .then( (response) => {
             console.log(JSON.stringify(response.data));
             str = response.data;
-            // var doSmall = new Promise(function(resolve, reject){
-               
-            //     resolve('I am doing something');
-            // });
-            // doSmall.then(function(value){
-                
-            // })
-            // .catch(err => console.log(err));
             
             var i1 = str.search("<table");
             var i2 = str.search("</table>");
@@ -147,23 +96,17 @@ app.get('/', function (req, res) {
                     fs.writeFile("./test.json", json);
                 })
                 .catch(err => console.log(err));
-                
+
             })
-            // console.log(result.resultTable);
             res.json(result.resultTable[0]);
         })
         .catch( (error) => {
             console.log(error);
         });
     });
-    
-    // doSome.then(function(value){
-    //     console.log("test");
-    //     console.log(result.resultTable);
-    //     // res.send(JSON.stringify(result.resultTable));
-    // });
 })
 
+// api to get details of a specific company by companyName and CIN
 app.get('/company/:companyName/:cin', (req, res) => {
     var cin = req.params.cin;
     const companyName = req.params.companyName;
@@ -193,12 +136,12 @@ app.get('/company/:companyName/:cin', (req, res) => {
     });
 });
 
+// API to add a company to the database
 app.post('/addCompany', (req, res) => {
     const cin = req.body.cin;
     const companyName = req.body.companyName;
-    const companyUrl = req.body.companyUrl;
 
-    insertData(cin, companyName, companyUrl).then(result => {
+    insertData(cin, companyName).then(result => {
         if (result) {
             console.log('User inserted');
             res.json({success : true, message : "Successfully Added"}); 
@@ -206,6 +149,7 @@ app.post('/addCompany', (req, res) => {
     });
 });
 
+// API to get the companyList from database
 app.get('/companyList', (req, res) => {
     pool.query('SELECT * FROM companies', (error, results) => {
         if (error) {
@@ -219,69 +163,3 @@ app.get('/companyList', (req, res) => {
 app.listen(port, () => {
     console.log(`Now listening on port ${port}`);
 }); 
-
-
-// `
-//             <table id="results" class="table table-striped col-md-12 col-sm-12 col-xs-12">
-//             <thead>
-//                 <tr>
-//                     <th>
-//                         <h4>CIN</h4>
-//                     </th>
-//                     <th>
-//                         <h4>Name</h4>
-//                     </th>
-
-//                     <th>
-//                         <h4>Address</h4>
-//                     </th>
-//                 </tr>
-//             </thead>
-
-//             <tr>
-//                 <td>
-//                     <h5>U72900DL2015PTC278287</h5>
-//                 </td>
-//                 <td><a
-//                         href="https://www.zaubacorp.com/company/XORIANT-INFOTECH-PRIVATE-LIMITED/U72900DL2015PTC278287">
-//                         <h5>XORIANT INFOTECH PRIVATE LIMITED</h5>
-//                     </a></td>
-
-//                 <td>708, 7TH FLOOR, GOPAL HEIGHTS, PLOT NO D-9 NETAJI SUBHASH PLACE,
-//                     PITAMPURA DELHI North West DL 110034 IN </td>
-
-//             </tr>
-
-
-//             <tr>
-//                 <td>
-//                     <h5>U64202KA1999PTC025917</h5>
-//                 </td>
-//                 <td><a
-//                         href="https://www.zaubacorp.com/company/XORIANT-SOLUTIONS-PRIVATE-LIMITED/U64202KA1999PTC025917">
-//                         <h5>XORIANT SOLUTIONS PRIVATE LIMITED</h5>
-//                     </a></td>
-
-//                 <td>GOLDEN HIEGHTS, 'B' WING,AM,1ST FLOOR ANANTH PATIL MARG SHVAJI PARK,
-//                     MUMBAI-400 028. BANGALORE KA 000000 IN </td>
-
-//             </tr>
-
-
-
-
-//             <tr>
-//                 <td>
-//                     <h5>U80222RJ2021NPL074295</h5>
-//                 </td>
-//                 <td><a
-//                         href="https://www.zaubacorp.com/company/ORIAN-FOUNDATION/U80222RJ2021NPL074295">
-//                         <h5>ORIAN FOUNDATION</h5>
-//                     </a></td>
-
-//                 <td>FLAT NO. 102, P.NO. D-12, GOKUL WATIKA, NEAR JAWAHAR CIRCLE JAIPUR
-//                     Jaipur RJ 302017 IN </td>
-//             </tr>
-//             </table>
-
-//         `

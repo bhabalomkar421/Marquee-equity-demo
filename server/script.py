@@ -14,11 +14,6 @@ class DataObject:
     def csvrow(self):
         return [str(self.cin),str(self.name_company),str(self.link)]
 def simple_get(url):
-    """
-    Attempts to get the content at `url` by making an HTTP GET request.
-    If the content-type of response is some kind of HTML/XML, return the
-    text content, otherwise return None.
-    """
     try:
         with closing(get(url, stream=True)) as resp:
             if is_good_response(resp):
@@ -32,9 +27,6 @@ def simple_get(url):
 
 
 def is_good_response(resp):
-    """
-    Returns True if the response seems to be HTML, False otherwise.
-    """
     content_type = resp.headers['Content-Type'].lower()
     return (resp.status_code == 200
             and content_type is not None
@@ -42,17 +34,14 @@ def is_good_response(resp):
 
 
 def log_error(e):
-    """
-    It is always a good idea to log errors.
-    This function just prints them, but you can
-    make it do anything.
-    """
     print(e)
 
 # searchterm = input("Enter search term:")
 # for()
 count=0
 data_array=[]
+
+# for first webpage
 
 # getstr='https://www.zaubacorp.com/company-list/'
 # print(getstr)
@@ -67,7 +56,8 @@ data_array=[]
 #         data_array.append(tempObj)
 #     count+=1
 
-for i in range(3001, 5001):
+# for later webpages -> change the range value
+for i in range(4001, 5001):
     getstr='https://www.zaubacorp.com/company-list/p-' + str(i) + '-company.html'
     print(getstr)
     html=simple_get(getstr)
